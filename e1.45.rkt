@@ -27,10 +27,6 @@
   
 (define (fixed-point-of-transform g transform guess)
   (fixed-point (transform g) guess))
-(define (sqrt x)
-  (fixed-point-of-transform (lambda (y) (/ x y))
-                            average-damp
-                            1.0))
 (define (log2 x) (/ (log x) (log 2)))
 (define (nth-root x n)
   (fixed-point-of-transform (lambda (y) (/ x (expt y (- n 1))))
