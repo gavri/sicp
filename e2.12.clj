@@ -1,4 +1,4 @@
-(ns e2.11 (:use clojure.test))
+(ns e2.12 (:use clojure.test))
 (defn make-interval [x y] [x y])
 (defn make-center-percent [c p] (make-interval (- c (* p c)) (+ c (* p c))))
 (def lower-bound first)
