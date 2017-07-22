@@ -1,0 +1,13 @@
+#lang racket
+(require rackunit)
+(define (square x) (* x x))
+(define (square-list-by-recursion items)
+  (if (null? items)
+    '()
+    (cons (square (car items)) (square-list-by-recursion (cdr items)))))
+(define (square-list-by-map items)
+  (map square items))
+(check-equal? (square-list-by-recursion '(1 2 3)) '(1 4 9))
+(check-equal? (square-list-by-recursion '()) '())
+(check-equal? (square-list-by-map '(1 2 3)) '(1 4 9))
+(check-equal? (square-list-by-map '()) '())
