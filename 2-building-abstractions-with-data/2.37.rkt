@@ -1,6 +1,6 @@
 #lang racket
 (require srfi/1)
-(require "e2.36.rkt")
+(require "2.36.rkt")
 
 (define (foldr-n op init seqs)
   (if (null? (car seqs)) null
