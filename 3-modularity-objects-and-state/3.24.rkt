@@ -2,20 +2,24 @@
 (require compatibility/mlist)
 (require rackunit)
 
-(define (make-table)
+(define (make-table equality-pred)
   (let ((local-table (mlist '*table*)))
+    (define (custom-massoc key records)
+      (cond ((null? records) false)
+            ((equality-pred key (mcar (mcar records))) (mcar records))
+            (else (custom-massoc key (mcdr records)))))
     (define (lookup key-1 key-2)
       (let ((subtable (massoc key-1 (mcdr local-table))))
         (if subtable
-          (let ((record (massoc key-2 (mcdr subtable))))(if record
-                                                          (mcdr record)
-                                                          false))
+          (let ((record (custom-massoc key-2 (mcdr subtable))))(if record
+                                                           (mcdr record)
+                                                           false))
           false)))
 
     (define (insert! key-1 key-2 value)
       (let ((subtable (massoc key-1 (mcdr local-table))))
         (if subtable
-          (let ((record (massoc key-2 (mcdr subtable))))
+          (let ((record (custom-massoc key-2 (mcdr subtable))))
             (if record
               (set-mcdr! record value)
               (set-mcdr! subtable
@@ -32,14 +36,24 @@
             (else (error "Unknown operation -- TABLE" m))))
     dispatch))
 
-(define table (make-table))
+(define table (make-table equal?))
 
 (check-equal? ((table 'insert-proc!) 'letters 'a 1) 'ok)
 (check-equal? ((table 'insert-proc!) 'letters 'b 2) 'ok)
-(check-equal? ((table 'insert-proc!) 'numbers '1 'one) 'ok)
-(check-equal? ((table 'insert-proc!) 'numbers '2 'two) 'ok)
+(check-equal? ((table 'insert-proc!) 'numbers 1 'one) 'ok)
+(check-equal? ((table 'insert-proc!) 'numbers 2 'two) 'ok)
 
 (check-equal? ((table 'lookup-proc) 'letters 'a) 1)
 (check-equal? ((table 'lookup-proc) 'letters 'b) 2)
-(check-equal? ((table 'lookup-proc) 'numbers '1) 'one)
-(check-equal? ((table 'lookup-proc) 'numbers '2) 'two)
+(check-equal? ((table 'lookup-proc) 'numbers 1) 'one)
+(check-equal? ((table 'lookup-proc) 'numbers 2) 'two)
+(check-equal? ((table 'lookup-proc) 'numbers 2.0) #f)
+
+(define table-for-numbers (make-table =))
+(check-equal? ((table-for-numbers 'insert-proc!) 'numbers 1 'one) 'ok)
+(check-equal? ((table-for-numbers 'insert-proc!) 'numbers 2 'two) 'ok)
+
+(check-equal? ((table-for-numbers 'lookup-proc) 'numbers 1) 'one)
+(check-equal? ((table-for-numbers 'lookup-proc) 'numbers 1.0) 'one)
+(check-equal? ((table-for-numbers 'lookup-proc) 'numbers 2.0) 'two)
+(check-equal? ((table-for-numbers 'lookup-proc) 'numbers 3.0) #f)
