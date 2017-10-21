@@ -155,3 +155,45 @@
             (error "Unknown request -- PROBE" request))))
   (connect connector me)
   me)
+
+(define (averager a b c)
+  (let ((sum (make-connector))
+        (two (make-connector)))
+    (constant 2 two)
+    (adder a b sum)
+    (multiplier two c sum)))
+
+(require rackunit)
+(define a (make-connector))
+(define b (make-connector))
+(define c (make-connector))
+
+(averager a b c)
+
+(check-equal? (get-value a) #f)
+(check-equal? (get-value b) #f)
+(check-equal? (get-value c) #f)
+
+(set-value! a 10 'me)
+
+(check-equal? (get-value a) 10)
+(check-equal? (get-value b) #f)
+(check-equal? (get-value c) #f)
+
+(set-value! b 4 'me)
+
+(check-equal? (get-value a) 10)
+(check-equal? (get-value b) 4)
+(check-equal? (get-value c) 7)
+
+(forget-value! a 'me)
+(check-equal? (has-value? a) #f)
+(check-equal? (has-value? c) #f)
+(check-equal? (has-value? b) #t)
+
+(forget-value! b 'me)
+(check-equal? (has-value? b) #f)
+
+(set-value! c 5 'me)
+(set-value! a 8 'me)
+(check-equal? (get-value b) 2)
