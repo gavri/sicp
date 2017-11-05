@@ -172,17 +172,17 @@
 (check-equal? (get-value C) #f)
 (check-equal? (get-value F) #f)
 
-(set-value! C 10 'me)
+(check-equal? (set-value! C 10 'me) 'done)
 
 (check-equal? (get-value C) 10)
 (check-equal? (get-value F) 50)
 
-(forget-value! C 'me)
+(check-equal? (forget-value! C 'me) 'done)
 
 (check-equal? (has-value? C) #f)
 (check-equal? (has-value? F) #f)
 
-(set-value! F 41 'me)
+(check-equal? (set-value! F 41 'me) 'done)
 
 (check-equal? (get-value F) 41)
 (check-equal? (get-value C) 5)

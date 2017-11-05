@@ -147,32 +147,32 @@
 (define b (make-connector))
 (define c (make-connector))
 
-(averager a b c)
+(check-not-false (averager a b c))
 
 (check-equal? (get-value a) #f)
 (check-equal? (get-value b) #f)
 (check-equal? (get-value c) #f)
 
-(set-value! a 10 'me)
+(check-equal? (set-value! a 10 'me) 'done)
 
 (check-equal? (get-value a) 10)
 (check-equal? (get-value b) #f)
 (check-equal? (get-value c) #f)
 
-(set-value! b 4 'me)
+(check-equal? (set-value! b 4 'me) 'done)
 
 (check-equal? (get-value a) 10)
 (check-equal? (get-value b) 4)
 (check-equal? (get-value c) 7)
 
-(forget-value! a 'me)
+(check-equal? (forget-value! a 'me) 'done)
 (check-equal? (has-value? a) #f)
 (check-equal? (has-value? c) #f)
 (check-equal? (has-value? b) #t)
 
-(forget-value! b 'me)
+(check-equal? (forget-value! b 'me) 'done)
 (check-equal? (has-value? b) #f)
 
-(set-value! c 5 'me)
-(set-value! a 8 'me)
+(check-equal? (set-value! c 5 'me) 'done)
+(check-equal? (set-value! a 8 'me) 'done)
 (check-equal? (get-value b) 2)
