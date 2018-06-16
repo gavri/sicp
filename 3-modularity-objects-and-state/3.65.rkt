@@ -1,12 +1,6 @@
 #lang racket
 
-(define (stream-map-multi proc argstreams)
-  (if (stream-empty? (car argstreams))
-    empty-stream
-    (stream-cons
-      (apply proc (map stream-first argstreams))
-      (apply stream-map-multi
-             (list proc (map stream-rest argstreams))))))
+(require srfi/41)
 
 (define (euler-transform s)
   (let ((s0 (stream-ref s 0))
@@ -40,14 +34,13 @@
 
 (define alternating-signs (stream-cons 1 (stream-map - alternating-signs)))
 
-(define terms (stream-map-multi * (list alternating-signs reciprocals-of-natural-numbers)))
+(define terms (apply stream-map * (list alternating-signs reciprocals-of-natural-numbers)))
 
 (define answer-first (partial-sums terms))
 (define answer-second (euler-transform answer-first))
 (define answer-third (accelerated-sequence euler-transform answer-first))
 
 (require rackunit)
-(require srfi/41)
 
 (define (take-5 s) (stream->list (stream-take 5 s)))
 
