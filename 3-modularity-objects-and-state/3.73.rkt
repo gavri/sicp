@@ -1,5 +1,7 @@
 #lang racket
 
+(require srfi/41)
+
 (define (scale-stream stream factor)
   (stream-map (lambda (x) (* x factor)) stream))
 
@@ -22,7 +24,6 @@
 (define RC1 (RC 5 1 0.5))
 
 (require rackunit)
-(require srfi/41)
 
 (define natural-numbers (stream-cons 1 (stream-map (lambda (x) (+ x 1)) natural-numbers)))
 
