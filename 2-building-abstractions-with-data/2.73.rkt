@@ -12,10 +12,7 @@
 (define (=number? exp num)
   (and (number? exp) (= exp num)))
 
-(define-generics exp
-                 [deriv exp var]
-                 [raw exp]
-                 )
+(define-generics exp [deriv exp var])
 
 (struct sum (addend augend)
         #:methods gen:exp
