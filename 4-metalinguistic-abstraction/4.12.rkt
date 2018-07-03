@@ -9,9 +9,6 @@
 (define (make-frame vars vals)
   (mcons 'frame (mmap (lambda (var val) (mcons var val)) (list->mlist vars) (list->mlist vals))))
 
-(define (add-binding-to-frame! var val frame)
-  (set-mcdr! frame (mcons (mcons var val) (mcdr frame))))
-
 (define (extend-environment vars vals base-env)
   (if (= (length vars) (length vals))
     (cons (make-frame vars vals) base-env)
@@ -20,26 +17,25 @@
       (error "Too few arguments supplied" vars vals))))
 
 (define (all-bindings env) (flatten (map (compose mlist->list mcdr) env)))
+(define (find-binding var env) (findf (lambda (e) (eq? var (mcar e))) (all-bindings env)))
 
 (define (lookup-variable-value var env)
-    (let ((binding (findf (lambda (e) (eq? var (mcar e))) (all-bindings env))))
+    (let ((binding (find-binding var env)))
       (cond (binding (mcdr binding))
         (else (error "Unbound variable" var)))))
 
 (define (set-variable-value! var val env)
-    (let ((binding (findf (lambda (e) (eq? var (mcar e))) (all-bindings env))))
+    (let ((binding (find-binding var env)))
       (cond (binding (set-mcdr! binding val))
         (else (error "Unbound variable" var)))))
 
 (define (define-variable! var val env)
-  (let ((frame (first-frame env)))
-    (define (scan vars-vals)
-      (cond ((null? vars-vals)
-             (add-binding-to-frame! var val frame))
-            ((eq? var (mcar (mcar vars-vals)))
-             (set-mcdr! (mcar vars-vals) val))
-            (else (scan (mcdr vars-vals)))))
-    (scan (mcdr frame))))
+    (let ((binding (find-binding var (list (first-frame env)))))
+      (cond (binding (set-mcdr! binding val))
+        (else (add-binding-to-frame! var val (first-frame env))))))
+
+(define (add-binding-to-frame! var val frame)
+  (set-mcdr! frame (mcons (mcons var val) (mcdr frame))))
 
 (require rackunit)
 
@@ -64,3 +60,7 @@
 (check-equal? (lookup-variable-value 'c fourth) 4)
 (check-not-exn (lambda () (define-variable! 'c 5 fourth)))
 (check-equal? (lookup-variable-value 'c fourth) 5)
+(define fifth (extend-environment '(d) '(6) fourth))
+(define-variable! 'a 10 fifth)
+(check-equal? (lookup-variable-value 'a fifth) 10)
+(check-equal? (lookup-variable-value 'a fourth) 1)
