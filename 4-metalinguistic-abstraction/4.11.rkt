@@ -68,3 +68,7 @@
 (check-equal? (lookup-variable-value 'c fourth) 4)
 (check-not-exn (lambda () (define-variable! 'c 5 fourth)))
 (check-equal? (lookup-variable-value 'c fourth) 5)
+(define fifth (extend-environment '(d) '(6) fourth))
+(define-variable! 'a 10 fifth)
+(check-equal? (lookup-variable-value 'a fifth) 10)
+(check-equal? (lookup-variable-value 'a fourth) 1)
