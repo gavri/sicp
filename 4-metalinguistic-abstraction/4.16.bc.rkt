@@ -8,26 +8,29 @@
 (define (definitions-from-body body) (filter definition? body))
 (define (body-without-definitions body) (filter (compose not definition?) body))
 
-(define (scan-out-defines-from-body body)
-  (let* ((definitions (definitions-from-body body))
-         (definition-vars (map cadr definitions))
-         (rest-of-body (body-without-definitions body)))
-    (cons 'let
-          (cons
-            (map (lambda (definition-var) (list definition-var ''*unassigned*)) definition-vars)
-            (append
-              (map (lambda (definition) (list 'set! (second definition) (third definition))) definitions)
-              (body-without-definitions body))))))
 
 (define (has-definitions? body)
   (memf (lambda (exp) (and (pair? exp) (eq? (car exp) 'define))) body))
 
-(define (scan-out-defines proc)
-  (cond ((has-definitions? (body proc)) (cons (car proc) (list (cadr proc) (scan-out-defines-from-body (cddr proc)))))
-        (else proc)))
+(define (scan-out-defines-from-body body)
+  (let* ((definitions (definitions-from-body body))
+         (definition-vars (map cadr definitions))
+         (rest-of-body (body-without-definitions body)))
+    (cond ((not (has-definitions? body)) body)
+          (else (list
+                  (cons 'let
+                        (cons
+                          (map (lambda (definition-var) (list definition-var ''*unassigned*)) definition-vars)
+                          (append
+                            (map (lambda (definition) (list 'set! (second definition) (third definition))) definitions)
+                            (body-without-definitions body)))))))))
 
-(define (make-procedure parameters body env)
-  (list 'procedure parameters (scan-out-defines-from-body body) env))
+(define (scan-out-defines proc)
+  (cons (car proc) (cons (cadr proc) (scan-out-defines-from-body (cddr proc)))))
+
+(define (make-procedure parameters body)
+  (cond ((has-definitions? body) (cons 'procedure (cons parameters (scan-out-defines-from-body body))))
+                                (else (list 'procedure parameters body))))
 
 (require rackunit)
 
@@ -43,6 +46,11 @@
 (check-equal? (scan-out-defines without-internal-definitions) without-internal-definitions)
 
 (check-equal?
-  (make-procedure '(a b c) '((define a 1) (define b 2) e1 e2) '())
-  '(procedure (a b c) (let ((a (quote *unassigned*)) (b (quote *unassigned*))) (set! a 1) (set! b 2) e1 e2) ())
+  (make-procedure '(a b c) '((define a 1) (define b 2) e1 e2))
+  '(procedure (a b c) (let ((a (quote *unassigned*)) (b (quote *unassigned*))) (set! a 1) (set! b 2) e1 e2))
+  )
+
+(check-equal?
+  (make-procedure '(a b c) '(e1 e2))
+  '(procedure (a b c) (e1 e2))
   )
