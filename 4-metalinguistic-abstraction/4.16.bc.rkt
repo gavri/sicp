@@ -23,6 +23,9 @@
 (define (scan-out-defines proc)
   (cons (car proc) (list (cadr proc) (scan-out-defines-from-body (cddr proc)))))
 
+(define (make-procedure parameters body env)
+  (list 'procedure parameters (scan-out-defines-from-body body) env))
+
 (require rackunit)
 
 (define anon-proc-input '(lambda (vars) (define u e1) (define v e2) e3 (define w e4) e5))
@@ -33,3 +36,8 @@
 
 (check-equal? (scan-out-defines anon-proc-input) anon-proc-expected)
 (check-equal? (scan-out-defines named-proc-input) named-proc-expected)
+
+(check-equal?
+  (make-procedure '(a b c) '((define a 1) (define b 2) e1 e2) '())
+  '(procedure (a b c) (let ((a (quote *unassigned*)) (b (quote *unassigned*))) (set! a 1) (set! b 2) e1 e2) ())
+  )
