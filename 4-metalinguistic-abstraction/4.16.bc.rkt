@@ -19,9 +19,12 @@
               (map (lambda (definition) (list 'set! (second definition) (third definition))) definitions)
               (body-without-definitions body))))))
 
+(define (has-definitions? body)
+  (memf (lambda (exp) (and (pair? exp) (eq? (car exp) 'define))) body))
 
 (define (scan-out-defines proc)
-  (cons (car proc) (list (cadr proc) (scan-out-defines-from-body (cddr proc)))))
+  (cond ((has-definitions? (body proc)) (cons (car proc) (list (cadr proc) (scan-out-defines-from-body (cddr proc)))))
+        (else proc)))
 
 (define (make-procedure parameters body env)
   (list 'procedure parameters (scan-out-defines-from-body body) env))
@@ -30,12 +33,14 @@
 
 (define anon-proc-input '(lambda (vars) (define u e1) (define v e2) e3 (define w e4) e5))
 (define anon-proc-expected '(lambda (vars) (let ((u (quote *unassigned*)) (v (quote *unassigned*)) (w (quote *unassigned*))) (set! u e1) (set! v e2) (set! w e4) e3 e5)))
+(check-equal? (scan-out-defines anon-proc-input) anon-proc-expected)
 
 (define named-proc-input '(define (vars) (define u e1) (define v e2) e3 (define w e4) e5))
 (define named-proc-expected '(define (vars) (let ((u (quote *unassigned*)) (v (quote *unassigned*)) (w (quote *unassigned*))) (set! u e1) (set! v e2) (set! w e4) e3 e5)))
-
-(check-equal? (scan-out-defines anon-proc-input) anon-proc-expected)
 (check-equal? (scan-out-defines named-proc-input) named-proc-expected)
+
+(define without-internal-definitions '(lambda (vars) e1 e2))
+(check-equal? (scan-out-defines without-internal-definitions) without-internal-definitions)
 
 (check-equal?
   (make-procedure '(a b c) '((define a 1) (define b 2) e1 e2) '())
